@@ -78,11 +78,5 @@ The application utilizes **SQLite** as its database and provides **RESTful API e
 
 ---
 
-## Next Steps
-
-- Implement **authentication and authorization** for securing the API.
-- Optimize query performance with **database indexing**.
-- Add **unit tests** for robust error handling and reliability.
-- Extend support for additional databases like **PostgreSQL** or **MySQL** for scalability.
 
 Enjoy using the project!
