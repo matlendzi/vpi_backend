@@ -124,15 +124,11 @@ for filename in os.listdir(DATA_FOLDER):
 # Create indexes to optimize queries
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_age_zone_id_date ON age_data (zone_id, date);")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_dwelltime_zone_id_date ON dwelltime_data (zone_id, date);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_gender_zone_id_date ON gender_data (zone_id, date);")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_visitortype_zone_id_date ON visitortype_data (zone_id, date);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_ziporigin_zone_id_date ON ziporigin_data (zone_id, date);")
 
 # Add additional indexes for specific filterable columns
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_age_group ON age_data (age_group);")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_dwelltime ON dwelltime_data (DwellTime);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_gender ON gender_data (gender);")
-cursor.execute("CREATE INDEX IF NOT EXISTS idx_visitortype ON visitortype_data (VisitorType);")
 
 # Commit the changes to the database and close the connection
 conn.commit()
