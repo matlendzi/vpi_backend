@@ -1,20 +1,9 @@
-from sqlalchemy import Column, Integer, String, Float
+from sqlalchemy import Column, Integer, String, Float, DateTime, Index
 from app.database import Base
 
 class VisitortypeData(Base):
     """
     SQLAlchemy model for the `visitortype_data` table.
-    This table stores data about visitor types for specific zones.
-
-    Attributes:
-        id (int): Primary key, unique identifier for each record.
-        hour (str): Hour of data collection.
-        weekday (str): Weekday of data collection.
-        quarter (str): Quarter of the year (e.g., Q1, Q2).
-        visitors (float): Number of visitors.
-        date (str): Date of the record.
-        zone_id (str): Identifier for the zone.
-        VisitorType (str): Type of visitor (e.g., tourist, local).
     """
     __tablename__ = "visitortype_data"
     id = Column(Integer, primary_key=True, index=True)
@@ -22,49 +11,35 @@ class VisitortypeData(Base):
     weekday = Column(String)
     quarter = Column(String)
     visitors = Column(Float)
-    date = Column(String)
-    zone_id = Column(String)
+    date = Column(DateTime, index=True)
+    zone_id = Column(String, index=True)
     VisitorType = Column(String)
+
+    # Composite index for efficient filtering
+    __table_args__ = (Index("idx_zone_id_date", "zone_id", "date"),)
+
 
 class AgeData(Base):
     """
     SQLAlchemy model for the `age_data` table.
-    This table stores data about the age groups of visitors for specific zones.
-
-    Attributes:
-        id (int): Primary key, unique identifier for each record.
-        zone_id (str): Identifier for the zone.
-        hour (str): Hour of data collection.
-        weekday (str): Weekday of data collection.
-        quarter (str): Quarter of the year (e.g., Q1, Q2).
-        visitors (float): Number of visitors.
-        date (str): Date of the record.
-        age_group (str): Age group of the visitors (e.g., 18-25, 26-35).
     """
     __tablename__ = "age_data"
     id = Column(Integer, primary_key=True, index=True)
-    zone_id = Column(String)
+    zone_id = Column(String, index=True)
     hour = Column(String)
     weekday = Column(String)
     quarter = Column(String)
     visitors = Column(Float)
-    date = Column(String)
+    date = Column(DateTime, index=True)
     age_group = Column(String)
+
+    # Composite index for efficient filtering
+    __table_args__ = (Index("idx_zone_id_date", "zone_id", "date"),)
+
 
 class DwelltimeData(Base):
     """
     SQLAlchemy model for the `dwelltime_data` table.
-    This table stores data about the dwell times of visitors in specific zones.
-
-    Attributes:
-        id (int): Primary key, unique identifier for each record.
-        hour (str): Hour of data collection.
-        weekday (str): Weekday of data collection.
-        quarter (str): Quarter of the year (e.g., Q1, Q2).
-        visitors (float): Number of visitors.
-        date (str): Date of the record.
-        zone_id (str): Identifier for the zone.
-        DwellTime (str): Dwell time category (e.g., 0-5 min, 6-15 min).
     """
     __tablename__ = "dwelltime_data"
     id = Column(Integer, primary_key=True, index=True)
@@ -72,6 +47,25 @@ class DwelltimeData(Base):
     weekday = Column(String)
     quarter = Column(String)
     visitors = Column(Float)
-    date = Column(String)
-    zone_id = Column(String)
+    date = Column(DateTime, index=True)
+    zone_id = Column(String, index=True)
     DwellTime = Column(String)
+
+    # Composite index for efficient filtering
+    __table_args__ = (Index("idx_zone_id_date", "zone_id", "date"),)
+
+
+class DailyFrequencyData(Base):
+    """
+    SQLAlchemy model for the `dailyfrequency_data` table.
+    """
+    __tablename__ = "dailyfrequency_data"
+    id = Column(Integer, primary_key=True, index=True)
+    zone_id = Column(String, index=True)
+    date = Column(DateTime, index=True)
+    Count = Column(Float)
+    ReiseArt = Column(String)
+    ReiseDistanz = Column(String)
+
+    # Composite index for efficient filtering
+    __table_args__ = (Index("idx_zone_id_date", "zone_id", "date"),)
