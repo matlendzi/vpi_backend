@@ -4,7 +4,8 @@ services:
   app:
     build: .
     ports:
-      - "9000:9000"
+      - "443:443"
     volumes:
-      - ./data:/app/data  # Mount CSV folder
-
+      - ./data:/app/data
+      - ./static:/static
+      - ./certs:/app/certs
