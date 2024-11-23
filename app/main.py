@@ -1,35 +1,39 @@
 from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app import crud
 from datetime import date
+import os
 
 # Initialize the FastAPI application
 app = FastAPI()
 
+# CORS Middleware Configuration
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all HTTP methods
+    allow_headers=["*"],  # Allow all HTTP headers
+)
+
+# Global Middleware for JSON Content-Type
+@app.middleware("http")
+async def add_json_header(request, call_next):
+    response = await call_next(request)
+    response.headers["Content-Type"] = "application/json"
+    return response
+
 # Visitor Types Endpoint
 @app.get("/visitor-types/")
 def get_visitor_types(
-    zone_id: str,                               # Required query parameter for zone identifier
-    group_by_date: date = Query(None, alias="group_by[date]"),  # Optional filter for date
-    VisitorType: str = Query(None, alias="VisitorType"),        # Optional filter for visitor type
-    db: Session = Depends(get_db)              # Database session injected using dependency
+    zone_id: str,
+    group_by_date: date = Query(None, alias="group_by[date]"),
+    VisitorType: str = Query(None, alias="VisitorType"),
+    db: Session = Depends(get_db)
 ):
-    """
-    Endpoint to retrieve aggregated visitor data by visitor types.
-
-    Args:
-        zone_id (str): Identifier for the zone.
-        group_by_date (date, optional): Date to filter the results. Defaults to None.
-        VisitorType (str, optional): Specific visitor type to filter the data. Defaults to None.
-        db (Session): SQLAlchemy database session (injected).
-
-    Returns:
-        dict: A JSON response containing the aggregated data.
-
-    Raises:
-        HTTPException: 404 error if no data is found for the given parameters.
-    """
     visitor_data = crud.get_visitor_types(db, zone_id=zone_id, date=group_by_date, VisitorType=VisitorType)
     if not visitor_data:
         raise HTTPException(status_code=404, detail="Data not found for the given parameters")
@@ -38,26 +42,11 @@ def get_visitor_types(
 # Ages Endpoint
 @app.get("/ages/")
 def get_age_groups(
-    zone_id: str,                               # Required query parameter for zone identifier
-    group_by_date: date = Query(None, alias="group_by[date]"),  # Optional filter for date
-    age_group: str = Query(None, alias="age_group"),            # Optional filter for age group
-    db: Session = Depends(get_db)              # Database session injected using dependency
+    zone_id: str,
+    group_by_date: date = Query(None, alias="group_by[date]"),
+    age_group: str = Query(None, alias="age_group"),
+    db: Session = Depends(get_db)
 ):
-    """
-    Endpoint to retrieve aggregated visitor data by age groups.
-
-    Args:
-        zone_id (str): Identifier for the zone.
-        group_by_date (date, optional): Date to filter the results. Defaults to None.
-        age_group (str, optional): Specific age group to filter the data. Defaults to None.
-        db (Session): SQLAlchemy database session (injected).
-
-    Returns:
-        dict: A JSON response containing the aggregated data.
-
-    Raises:
-        HTTPException: 404 error if no data is found for the given parameters.
-    """
     age_data = crud.get_age_groups(db, zone_id=zone_id, date=group_by_date, age_group=age_group)
     if not age_data:
         raise HTTPException(status_code=404, detail="Data not found for the given parameters")
@@ -66,27 +55,54 @@ def get_age_groups(
 # Dwell Times Endpoint
 @app.get("/dwell-times/")
 def get_dwell_times(
-    zone_id: str,                               # Required query parameter for zone identifier
-    group_by_date: date = Query(None, alias="group_by[date]"),  # Optional filter for date
-    DwellTime: str = Query(None, alias="DwellTime"),            # Optional filter for dwell time category
-    db: Session = Depends(get_db)              # Database session injected using dependency
+    zone_id: str,
+    group_by_date: date = Query(None, alias="group_by[date]"),
+    DwellTime: str = Query(None, alias="DwellTime"),
+    db: Session = Depends(get_db)
 ):
-    """
-    Endpoint to retrieve aggregated visitor data by dwell times.
-
-    Args:
-        zone_id (str): Identifier for the zone.
-        group_by_date (date, optional): Date to filter the results. Defaults to None.
-        DwellTime (str, optional): Specific dwell time category to filter the data. Defaults to None.
-        db (Session): SQLAlchemy database session (injected).
-
-    Returns:
-        dict: A JSON response containing the aggregated data.
-
-    Raises:
-        HTTPException: 404 error if no data is found for the given parameters.
-    """
     dwell_data = crud.get_dwell_times(db, zone_id=zone_id, date=group_by_date, DwellTime=DwellTime)
     if not dwell_data:
         raise HTTPException(status_code=404, detail="Data not found for the given parameters")
     return {"data": dwell_data}
+
+# Daily Aggregated Endpoint
+@app.get("/daily_aggregated/")
+def get_daily_aggregated(
+    zone_id: str,
+    date: str = Query(None),
+    date__gte: str = Query(None),
+    date__lte: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    daily_data = crud.get_daily_aggregated(db, zone_id=zone_id, date=date, date__gte=date__gte, date__lte=date__lte)
+    if not daily_data:
+        raise HTTPException(status_code=404, detail="No data found for the given parameters.")
+    return {"data": daily_data}
+
+# Daily Endpoint
+@app.get("/daily/")
+def get_hourly_data(
+    zone_id: str,
+    date__gte: str = Query(None),
+    date__lte: str = Query(None),
+    db: Session = Depends(get_db)
+):
+    if not date__gte or not date__lte:
+        raise HTTPException(status_code=400, detail="Both date__gte and date__lte are required.")
+
+    hourly_data = crud.get_hourly_aggregated(db, zone_id=zone_id, date__gte=date__gte, date__lte=date__lte)
+    if not hourly_data:
+        raise HTTPException(status_code=404, detail="No data found for the given parameters.")
+    return {"data": hourly_data}
+
+# New Endpoint to Serve Static JSON File
+@app.get("/locations/all_summary/")
+def get_all_summary(format: str = Query("json")):
+    if format != "json":
+        raise HTTPException(status_code=400, detail="Only 'json' format is supported.")
+
+    file_path = os.path.join("static", "all_summary.json")
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Summary file not found.")
+
+    return FileResponse(file_path)
