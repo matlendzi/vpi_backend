@@ -1,22 +1,27 @@
+import os
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-# URL for the SQLite database connection
-# Update the URL as needed to switch to a different database (e.g., PostgreSQL or MySQL)
-DATABASE_URL = "sqlite:///./poc_data.db"
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+
+# Environment variable for the database URL, defaulting to SQLite with `database.db`
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/database.db")
 
 # Create the SQLAlchemy engine
-# connect_args={"check_same_thread": False} is specific to SQLite and allows multiple threads to access the database
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+try:
+    engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+    logging.info("Database connection established successfully.")
+except Exception as e:
+    logging.error(f"Failed to connect to the database: {e}")
+    raise
 
 # Create a configured "Session" class
-# autocommit=False: Transactions need to be explicitly committed
-# autoflush=False: Changes to the objects are not automatically flushed to the database
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Base class for declarative class definitions
-# Models will inherit from this base class to define database tables
 Base = declarative_base()
 
 def get_db():
@@ -30,6 +35,6 @@ def get_db():
     """
     db = SessionLocal()
     try:
-        yield db  # Provide the session to the caller
+        yield db
     finally:
-        db.close()  # Close the session after use to release database connections
+        db.close()
