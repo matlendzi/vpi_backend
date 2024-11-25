@@ -42,20 +42,6 @@ cursor.execute("""
     )
 """)
 
-# Table for storing gender data
-cursor.execute("""
-    CREATE TABLE IF NOT EXISTS gender_data (
-        id INTEGER,           -- Unique identifier for each record
-        zone_id TEXT,         -- Zone identifier
-        hour TEXT,            -- Hour of the data collection
-        weekday TEXT,         -- Weekday of the data collection
-        quarter TEXT,         -- Quarter of the year
-        visitors REAL,        -- Number of visitors
-        date TEXT,            -- Date of the record
-        gender TEXT           -- Gender of the visitors
-    )
-""")
-
 # Table for storing visitor type data
 cursor.execute("""
     CREATE TABLE IF NOT EXISTS visitortype_data (
@@ -70,18 +56,15 @@ cursor.execute("""
     )
 """)
 
-# Table for storing zip origin data
+# Table for storing daily frequency data
 cursor.execute("""
-    CREATE TABLE IF NOT EXISTS ziporigin_data (
+    CREATE TABLE IF NOT EXISTS dailyfrequency_data (
         id INTEGER,           -- Unique identifier for each record
         zone_id TEXT,         -- Zone identifier
-        hour TEXT,            -- Hour of the data collection
-        weekday TEXT,         -- Weekday of the data collection
-        quarter TEXT,         -- Quarter of the year
-        visitors REAL,        -- Number of visitors
-        date TEXT,            -- Date of the record
-        zip_code TEXT,        -- ZIP code of the origin
-        use TEXT              -- Type of use (e.g., residential, business, etc.)
+        date TEXT,            -- Date and time of the record
+        Count REAL,           -- Number of visitors
+        ReiseArt TEXT,        -- Type of journey (e.g., inbound, outbound)
+        ReiseDistanz TEXT     -- Distance category (e.g., -5 km, 5-30 km)
     )
 """)
 
@@ -105,26 +88,22 @@ for filename in os.listdir(DATA_FOLDER):
         print(f"Processing {filename}:")
         print(df.head())
         df.to_sql("dwelltime_data", conn, if_exists="append", index=False)
-    elif filename.startswith("Hamburg_gender"):
-        df = pd.read_csv(file_path)
-        print(f"Processing {filename}:")
-        print(df.head())
-        df.to_sql("gender_data", conn, if_exists="append", index=False)
     elif filename.startswith("Hamburg_visitortype"):
         df = pd.read_csv(file_path)
         print(f"Processing {filename}:")
         print(df.head())
         df.to_sql("visitortype_data", conn, if_exists="append", index=False)
-    elif filename.startswith("Hamburg_ziporigin"):
+    elif filename.startswith("Hamburg_dailyfrequency"):
         df = pd.read_csv(file_path)
         print(f"Processing {filename}:")
         print(df.head())
-        df.to_sql("ziporigin_data", conn, if_exists="append", index=False)
+        df.to_sql("dailyfrequency_data", conn, if_exists="append", index=False)
 
 # Create indexes to optimize queries
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_age_zone_id_date ON age_data (zone_id, date);")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_dwelltime_zone_id_date ON dwelltime_data (zone_id, date);")
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_visitortype_zone_id_date ON visitortype_data (zone_id, date);")
+cursor.execute("CREATE INDEX IF NOT EXISTS idx_dailyfrequency_zone_id_date ON dailyfrequency_data (zone_id, date);")
 
 # Add additional indexes for specific filterable columns
 cursor.execute("CREATE INDEX IF NOT EXISTS idx_age_group ON age_data (age_group);")
