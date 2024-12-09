@@ -10,8 +10,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app /app/app
 
 # Ensure the certs directory is accessible
+# (You will mount the certs directory via Docker Compose)
 # Expose the HTTPS port
 EXPOSE 443
 
 # Set the command to run the FastAPI application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "443", "--ssl-keyfile", "/app/certs/yourdomain.de.key", "--ssl-certfile", "/app/certs/fullchain.pem"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "443", "--ssl-keyfile", "/app/certs/kartenmitwirkung.de.key", "--ssl-certfile", "/app/certs/fullchain.pem"]
